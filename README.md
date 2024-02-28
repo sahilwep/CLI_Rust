@@ -12,10 +12,15 @@ Rust Command line applications Walkthrough
   * [docs](https://docs.rs/clap/latest/clap/)
 
 
+
 ## Project Setup : 
 
 * We can use `cargo new grrs` command to setup new project.
-  
+
+
+
+
+
 ## Parsing Command-line arguments:
 
 * A typical invocation of our code tool will look like this:
@@ -159,5 +164,65 @@ sahilwep~$ cargo run -- pattern-some path-some
 pattern: "pattern-some", path: "path-some"
 ```
 
+
+
+
 ## First implementation of *grrs*
+
+* We can take argument as an input, but we don't know how to open the file.
+* We can open any file with : 
+```rust
+let content = std::fs:::read_to_string(&args.path).expect("could not read the file");
+```
+* **NOTE :** `.expect` method here is a shortcut function that will make the program exit immediately when the value (in this case the input file) could not be read. It's not very pretty, and the next chapter on **Nicer error reporting** we will look at how to improve this.
+
+* Now, let's iterate over the lines and print each one that contains our pattern:
+
+```rust
+for line in content.lines() {
+  if line.contents(&args.pattern) {
+    println!("{}", line);
+  }
+}
+```
+
+* Our code will look like this:
+
+```rust
+use clap::Parser;
+
+// Search for a pattern in a file and display the lines that contains it.
+#[derive(Parser)]
+struct CLI {
+    // pattern to look for
+    pattern: String,
+    // The path to the file to read.
+    path: std::path::PathBuf,
+}
+
+fn main() {
+    let args = CLI::parse();
+    let content = std::fs::read_to_string(&args.path).expect("Could not read file");
+
+    for line in content.lines() {
+        if line.contains(&args.pattern) {
+            println!("{}", line);
+        }
+    }
+}
+```
+
+* Output : 
+
+```sh
+sahilwep~$ cargo run -- name file.txt
+    Finished dev [unoptimized + debuginfo] target(s) in 0.06s
+     Running `target/debug/grrs name file.txt`
+ sahilwep is my name
+```
+
+
+
+
+### Nice Error reporting : 
 
