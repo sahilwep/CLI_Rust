@@ -94,3 +94,70 @@ fn main() {
 * This works, but not very convenient. We can't deal with the requirement to support `--pattern="foo"` or `--pattern "foo"` or `--help`.
 
 ### Parsing CLI arguments with Clap:
+
+* We can use one of the many available library to parse our CLI arguments. One of the popular is `clap`. It has all the functionality including support of `sub-commands`, shell completions, and great help message.
+
+* For importing `clap` we need to add `clap = {version = "4.0", features = ["derive"]}` to the dependencies section of our `Cargo.toml` file.
+* Now, we can write `use clap::Parser` in our code, and `#[derive(parser)]` right above our `struct CLI`
+
+```rust
+use clap::Parser;
+
+// Search for a pattern in a file and display the lines that contains it.
+struct CLI {
+    // pattern to look for
+    pattern: String,
+    // The path to the file to read.
+    path: std::path::PathBuf,
+}
+```
+* **Note :** There are a lot custom attributes you can add to field. For example, to say you want to use this field for the argument after `-o` or `--output`, you'd add `#[arg(short = 'o', long = "output")]`. [clap Documentation](https://docs.rs/clap/)
+
+* Right below the `CLI` struct our template contains its `main` function. WHen the program starts, it will call this function.
+
+```rust
+fn main(){
+  let args = Cli::parse();
+
+  println!("pattern: {:?}, path: {:?}", args.pattern, args.path);
+}
+```
+
+* This will try to parse the arguments into our `CLI` struct.
+* But what if that fails? That's the beauty of this approach: Clap knows which field to expect, and what their expected format is. It can automatically generate a nice `--help` message, as well as give some great errors to suggest you pass `--output` when you wrote `--putput`.
+
+* **NOTE :** The `parse` method is meant to be used in your `main` function. When it fails, it will print out an error or help message and immediately exit the program. Don't user it in other places!.
+
+* Our code will look something like this : 
+
+```rust
+use clap::Parser;
+
+// Search for a pattern in a file and display the lines that contains it.
+#[derive(Parser)]
+struct CLI {
+    // pattern to look for
+    pattern: String,
+    // The path to the file to read.
+    path: std::path::PathBuf,
+}
+
+fn main() {
+    let args = CLI::parse();
+
+    println!("pattern: {:?}, path: {:?}", args.pattern, args.path);
+}
+```
+
+* Output : 
+
+```sh
+sahilwep~$ cargo run -- pattern-some path-some
+   Compiling grrs v0.1.0 (/Users/sahilwep/Developer/Development/Rust/CLI_Rust/grrs)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.27s
+     Running `target/debug/grrs pattern-some path-some`
+pattern: "pattern-some", path: "path-some"
+```
+
+## First implementation of *grrs*
+
